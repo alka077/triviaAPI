@@ -2,6 +2,7 @@ import json
 from logging import exception
 import os
 from tkinter.messagebox import NO
+from token import EXACT_TOKEN_TYPES
 from unicodedata import category
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -145,14 +146,14 @@ def create_app(test_config=None):
     #working fine
     @app.route('/questions', methods = ['POST'])
     def create_question():
-        categories = Category.query.order_by(Category.id).all()
+        
         body = request.get_json()
 
         new_question = body.get('question', None)
         new_answer = body.get('answer', None)
         new_difficulty = body.get('difficulty', None)
         new_category = body.get('category', None)
-
+        categories = Category.query.order_by(Category.id).all()
         #formatted_categories = [category.format() for category in categories]
 
         try:
@@ -211,19 +212,19 @@ def create_app(test_config=None):
     ## working fine
     @app.route('/categories/<int:category_id>/questions', methods=['GET'])
     def list_category(category_id):
+        try:
+            category = Category.query.filter(Category.id == category_id).one()
+            questions = Question.query.filter(Question.category == category_id)
+            formatted_question = [question.format() for question in questions]
 
-        category = Category.query.filter(Category.id == category_id).one()
-        questions = Question.query.filter(Question.category == category_id)
-        formatted_question = [question.format() for question in questions]
-        if category_id is not Integer:
+            return jsonify({
+                "success": True,
+                "questions": formatted_question,
+                "total_questions": len(Question.query.all()),
+                "current_category": category.format().get('type')
+            }), 200
+        except:
             abort(404)
-
-        return jsonify({
-            "success": True,
-            "questions": formatted_question,
-            "total_questions": len(Question.query.all()),
-            "current_category": category.format().get('type')
-        }), 200
 
     """
     @TODO:
