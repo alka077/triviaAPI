@@ -8,9 +8,6 @@ from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
-
-from sqlalchemy import Integer
-
 from models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
@@ -142,34 +139,6 @@ def create_app(test_config=None):
     the form will clear and the question will appear at the end of the last page
     of the questions list in the "List" tab.
     """
-
-    #working fine
-    @app.route('/questions', methods = ['POST'])
-    def create_question():
-        
-        body = request.get_json()
-
-        new_question = body.get('question', None)
-        new_answer = body.get('answer', None)
-        new_difficulty = body.get('difficulty', None)
-        new_category = body.get('category', None)
-        categories = Category.query.order_by(Category.id).all()
-        #formatted_categories = [category.format() for category in categories]
-
-        try:
-            question = Question(question = new_question, answer=new_answer, difficulty=new_difficulty, category=new_category)
-            question.insert()
-
-            return jsonify({
-                "success": True,
-                "created_question": question.id,
-                "question": question,
-                "total_question": len(Question.query.all()),
-            }), 200
-        except Exception as e:
-            print(e)
-            abort(422)
-
     """
     @TODO:
     Create a POST endpoint to get questions based on a search term.
@@ -182,23 +151,49 @@ def create_app(test_config=None):
     """
 
     #working fine
-    @app.route('/questions/search', methods =['POST'])
-    def search_question():
+    @app.route('/questions', methods = ['POST'])
+    def create_question():
+        
+        body = request.get_json()
+        
+        new_question = body.get('question', None)
+        new_answer = body.get('answer', None)
+        new_difficulty = body.get('difficulty', None)
+        new_category = body.get('category', None)
+        searchTerm = body.get('searchTerm', None)
 
-        searchTerm = request.get_json().get('searchTerm', None)
         try:
-            selection = Question.query.order_by(Question.id).filter(Question.question.ilike('%{}%'.format(searchTerm))).all()
-            current_questions = paginate_questions(request, selection)
+            if searchTerm:
+                selection = Question.query.order_by(Question.id).filter(
+                    Question.question.ilike("%{}%".format(searchTerm))
+                )
+                current_question = paginate_questions(request, selection)
 
-            return jsonify({
-                "success": True,
-                "question": current_questions,
-                "total_questions": len(selection),
-                "current_category": None
-            }), 200
-        except Exception as e:
-            print(e)
+                return jsonify(
+                    {
+                        "success": True,
+                        "books": current_question,
+                        "total_books": len(selection.all()),
+                    }
+                )
+            else:
+                question = Question(question=new_question, answer=new_answer, difficulty=new_difficulty, category=new_category)
+                question.insert()
+
+                selection = Question.query.order_by(Question.id).all()
+                current_question = paginate_questions(request, selection)
+
+                return jsonify(
+                    {
+                        "success": True,
+                        "created": Question.id,
+                        "books": current_question,
+                        "total_books": len(Question.query.all()),
+                    }
+                )
+        except:
             abort(422)
+
 
     """
     @TODO:
