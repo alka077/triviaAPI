@@ -172,8 +172,8 @@ def create_app(test_config=None):
                 return jsonify(
                     {
                         "success": True,
-                        "books": current_question,
-                        "total_books": len(selection.all()),
+                        "question": current_question,
+                        "total_question": len(selection.all()),
                     }
                 )
             else:
@@ -187,8 +187,8 @@ def create_app(test_config=None):
                     {
                         "success": True,
                         "created": Question.id,
-                        "books": current_question,
-                        "total_books": len(Question.query.all()),
+                        "question": current_question,
+                        "total_question": len(Question.query.all()),
                     }
                 )
         except:
